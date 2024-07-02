@@ -1,0 +1,5 @@
+streamlit
+pandas
+fbprophet
+matplotlib
+streamlit-option-menu
