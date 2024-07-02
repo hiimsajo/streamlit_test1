@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from fbprophet import Prophet
+from prophet import Prophet
 import matplotlib.pyplot as plt
 from streamlit_option_menu import option_menu
 
