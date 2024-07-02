@@ -3,4 +3,4 @@ pandas
 prophet
 matplotlib
 streamlit-option-menu
-numpy
+numpy<2.0
