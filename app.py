@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
-from prophet import Prophet
-import matplotlib.pyplot as plt
+from fbprophet import Prophet
+import plotly.graph_objs as go
 from streamlit_option_menu import option_menu
 
 # 파일 업로드
-st.title("Prophet Time Series Forecasting App")
+st.title("서울데이케어센터 예측 시각화 앱")
 
 uploaded_file = st.file_uploader("CSV 파일을 업로드하세요", type=["csv"])
 
@@ -42,10 +42,10 @@ if uploaded_file is not None:
         for metric in metrics:
             st.subheader(f"{metric} 예측")
             
-            # Prophet 모델을 사용하기 위한 데이터 준비
+            # FBProphet 모델을 사용하기 위한 데이터 준비
             data = patient_data[["측정날짜", metric]].rename(columns={"측정날짜": "ds", metric: "y"})
 
-            # Prophet 모델 생성 및 학습
+            # FBProphet 모델 생성 및 학습
             model = Prophet()
             model.fit(data)
 
@@ -54,11 +54,25 @@ if uploaded_file is not None:
             forecast = model.predict(future)
 
             # 예측 결과 시각화
-            fig1 = model.plot(forecast)
-            fig2 = model.plot_components(forecast)
-            
-            st.pyplot(fig1)
-            st.pyplot(fig2)
+            fig = go.Figure()
+
+            # 실제 데이터
+            fig.add_trace(go.Scatter(x=data['ds'], y=data['y'], mode='lines', name='Actual'))
+
+            # 예측 데이터
+            fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines', name='Forecast'))
+
+            # 불확실성 구간
+            fig.add_trace(go.Scatter(
+                x=forecast['ds'], y=forecast['yhat_upper'], mode='lines',
+                line=dict(width=0), showlegend=False))
+            fig.add_trace(go.Scatter(
+                x=forecast['ds'], y=forecast['yhat_lower'], mode='lines',
+                fill='tonexty', line=dict(width=0), showlegend=False, name='Uncertainty Interval'))
+
+            fig.update_layout(title=f"{metric} 예측", xaxis_title="날짜", yaxis_title=metric)
+
+            st.plotly_chart(fig)
     except Exception as e:
         st.error(f"파일을 처리하는 중 오류가 발생했습니다: {e}")
 else:
