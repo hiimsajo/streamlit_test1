@@ -8,7 +8,14 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install the dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    python-dev \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN pip install --upgrade pip
+RUN pip install wheel
 RUN pip install -r requirements.txt
 
 # Copy the rest of the application code into the container
