@@ -1,25 +1,26 @@
-# Use the official Python image from the Docker Hub
-FROM python:3.9
+# Python 3.8을 사용한 베이스 이미지 설정
+FROM python:3.8-slim
 
-# Set the working directory
+# 작업 디렉토리 설정
 WORKDIR /app
 
-# Copy the requirements file into the container
-COPY requirements.txt .
-
-# Install the dependencies
+# 필요한 패키지 설치
 RUN apt-get update && apt-get install -y \
     build-essential \
-    python-dev \
-    libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
+    python3-dev \
+    gcc \
+    libstan-dev \
+    libstan-math-dev \
+    libboost-dev \
+    libboost-program-options-dev
 
+# requirements.txt 파일을 컨테이너에 복사하고 종속성 설치
+COPY requirements.txt requirements.txt
 RUN pip install --upgrade pip
-RUN pip install wheel
 RUN pip install -r requirements.txt
 
-# Copy the rest of the application code into the container
+# 모든 파일을 컨테이너에 복사
 COPY . .
 
-# Command to run the Streamlit app
+# Streamlit 앱 실행 명령
 CMD ["streamlit", "run", "app.py"]
