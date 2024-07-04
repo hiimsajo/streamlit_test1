@@ -7,6 +7,6 @@
 
 streamlit
 pandas
-fbprophet
+prophet
 matplotlib
 streamlit-option-menu
