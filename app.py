@@ -3,7 +3,9 @@ import pandas as pd
 from prophet import Prophet
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
+from matplotlib import rc
 from streamlit_option_menu import option_menu
+import chardet
 
 # css 파일 읽어오기
 def local_css(file_name):
@@ -15,8 +17,17 @@ local_css("style.css")
 
 # 한글폰트 적용하기
 font_path = 'font/NotoSansKR-VariableFont_wght.ttf'
-fontprop = fm.FontProperties(fname=font_path, size=12)
-plt.rcParams['font.family'] = fontprop.get_name()
+font_name = fm.FontProperties(fname=font_path).get_name()
+rc('font', family=font_name)
+# fontprop = fm.FontProperties(fname=font_path, size=12)
+# plt.rcParams['font.family'] = fontprop.get_name()
+
+# 파일 인코딩 감지 함수
+def detect_encoding(file):
+    raw_data = file.read()
+    result = chardet.detect(raw_data)
+    file.seek(0)  # 파일 포인터를 다시 처음으로
+    return result['encoding']
 
 # 파일 업로드
 st.markdown("<h1 class='title'>AI Health data Monitoring and Prediction System</h1>", unsafe_allow_html=True)
@@ -25,8 +36,9 @@ uploaded_file = st.file_uploader("CSV 파일을 업로드하세요", type=["csv"
 
 if uploaded_file is not None:
     try:
-        # CSV 파일을 데이터프레임으로 읽기
-        df = pd.read_csv(uploaded_file)
+        # CSV 파일 인코딩 감지 및 데이터프레임으로 읽기
+        encoding = detect_encoding(uploaded_file)
+        df = pd.read_csv(uploaded_file, encoding=encoding)
 
         # 데이터 확인
         st.write("업로드된 데이터:")
