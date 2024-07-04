@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
-from prophet import Prophet
+from fbprophet import Prophet
 import matplotlib.pyplot as plt
 from streamlit_option_menu import option_menu
 
 # 파일 업로드
-st.title("서울데이케어센터 Prophet 예측 App")
+st.title("FBProphet Time Series Forecasting App")
 
 uploaded_file = st.file_uploader("CSV 파일을 업로드하세요", type=["csv"])
 
@@ -18,7 +18,7 @@ if uploaded_file is not None:
         st.write("업로드된 데이터:")
         st.write(df.head())
 
-        # 2. 환자 선택 기능
+        # 환자 선택 기능
         option = st.selectbox("환자번호 또는 환자이름으로 선택하세요", ["환자번호", "환자이름"])
         if option == "환자번호":
             patients = df["환자번호"].unique()
@@ -38,14 +38,14 @@ if uploaded_file is not None:
         patient_data = patient_data.sort_values('측정날짜')
 
         metrics = ["수축기혈압", "이완기혈압", "맥박", "혈당", "체온", "호흡", "체중"]
-
+        
         for metric in metrics:
             st.subheader(f"{metric} 예측")
-
-            # Prophet 모델을 사용하기 위한 데이터 준비
+            
+            # FBProphet 모델을 사용하기 위한 데이터 준비
             data = patient_data[["측정날짜", metric]].rename(columns={"측정날짜": "ds", metric: "y"})
 
-            # Prophet 모델 생성 및 학습
+            # FBProphet 모델 생성 및 학습
             model = Prophet()
             model.fit(data)
 
@@ -56,7 +56,7 @@ if uploaded_file is not None:
             # 예측 결과 시각화
             fig1 = model.plot(forecast)
             fig2 = model.plot_components(forecast)
-
+            
             st.pyplot(fig1)
             st.pyplot(fig2)
     except Exception as e:
