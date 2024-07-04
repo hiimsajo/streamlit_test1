@@ -4,8 +4,16 @@ from prophet import Prophet
 import matplotlib.pyplot as plt
 from streamlit_option_menu import option_menu
 
+# css 파일 읽어오기
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdowm(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
+# css 적용하기
+local_css("style.css")
+
 # 파일 업로드
-st.title("FBProphet Time Series Forecasting App")
+st.markdown("<h1 class='title'>AI Health data Monitoring and Prediction System</h1>", unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader("CSV 파일을 업로드하세요", type=["csv"])
 
@@ -39,13 +47,22 @@ if uploaded_file is not None:
 
         metrics = ["수축기혈압", "이완기혈압", "맥박", "혈당", "체온", "호흡", "체중"]
         
+        # 이상치 기준선 설정
+        thresholds = {
+            "수축기혈압": {"upper": 140, "lower": 100},
+            "이완기혈압": {"upper": 90, "lower": 60},
+            "맥박": {"upper": 90, "lower": 50},
+            "체온": {"upper": 37, "lower": 36},
+        }
+
+
         for metric in metrics:
             st.subheader(f"{metric} 예측")
             
-            # FBProphet 모델을 사용하기 위한 데이터 준비
+            # Prophet 모델을 사용하기 위한 데이터 준비
             data = patient_data[["측정날짜", metric]].rename(columns={"측정날짜": "ds", metric: "y"})
 
-            # FBProphet 모델 생성 및 학습
+            # Prophet 모델 생성 및 학습
             model = Prophet()
             model.fit(data)
 
@@ -54,11 +71,17 @@ if uploaded_file is not None:
             forecast = model.predict(future)
 
             # 예측 결과 시각화
-            fig1 = model.plot(forecast)
-            fig2 = model.plot_components(forecast)
+            fig, ax = plt.subplots()
+            ax.plot(data['ds'], data['y'], labal='실제', color='blue')
+            ax.plot(forecast['ds'], forecast['yhat'], label='예측', color='violet')
+
+            # 기준선 표시
+            ax.axhline(y=thresholds[metric]["upper"], color='green', linestyle='-', label='상한선')
+            ax.axhline(y=thresholds[metric]["lower"], color='green', linestyle='-', label='하한선')
             
-            st.pyplot(fig1)
-            st.pyplot(fig2)
+            ax.legend()
+            ax.set_title(f"{metric} 예측 및 이상치 표시")
+            st.pyplot(fig)
     except Exception as e:
         st.error(f"파일을 처리하는 중 오류가 발생했습니다: {e}")
 else:
