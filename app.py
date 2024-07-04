@@ -72,7 +72,7 @@ if uploaded_file is not None:
 
             # 예측 결과 시각화
             fig, ax = plt.subplots()
-            ax.plot(data['ds'], data['y'], labal='실제', color='blue')
+            ax.plot(data['ds'], data['y'], label='실제', color='blue')
             ax.plot(forecast['ds'], forecast['yhat'], label='예측', color='violet')
 
             # 기준선 표시
