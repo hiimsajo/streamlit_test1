@@ -7,7 +7,7 @@ from streamlit_option_menu import option_menu
 # css 파일 읽어오기
 def local_css(file_name):
     with open(file_name) as f:
-        st.markdowm(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 # css 적용하기
 local_css("style.css")
