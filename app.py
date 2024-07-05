@@ -27,6 +27,10 @@ fm.fontManager.addfont(font_path)
 plt.rcParams['font.family'] = font_properties.get_name()
 # fontprop = fm.FontProperties(fname=font_path, size=12)
 # plt.rcParams['font.family'] = fontprop.get_name()
+plt.rcParams['axes.titlesize'] = 15  # 그래프 제목 크기
+plt.rcParams['axes.labelsize'] = 13  # 축 제목 크기
+plt.rcParams['xtick.labelsize'] = 11  # x축 눈금 크기
+plt.rcParams['ytick.labelsize'] = 11  # y축 눈금 크기
 
 # 파일 인코딩 감지 함수
 def detect_encoding(file):
@@ -131,6 +135,9 @@ if uploaded_file is not None:
             
                 ax.legend(prop=font_properties, loc='upper right') # 범례박스 고정
                 ax.set_title(f"{metric} 예측 그래프", fontproperties=font_properties)
+                plt.xticks(fontsize=14)  # x축 눈금 크기 설정
+                plt.yticks(fontsize=14)  # y축 눈금 크기 설정
+                plt.subplots_adjust(hspace=0.4)  # 그래프 사이에 간격 추가
                 st.pyplot(fig)
 
                 # # 모델 성능 평가
