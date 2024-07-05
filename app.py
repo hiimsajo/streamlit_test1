@@ -9,6 +9,9 @@ import chardet
 # from sklearn.metrics import mean_absolute_error, mean_squared_error
 import numpy as np
 
+# 페이지 설정
+st.set_page_config(layout="wide")
+
 # css 파일 읽어오기
 def local_css(file_name):
     with open(file_name) as f:
@@ -112,7 +115,7 @@ if uploaded_file is not None:
                 forecast = model.predict(future)
 
                 # 예측 결과 시각화
-                fig, ax = plt.subplots(figsize=(16, 6)) # 가로폭 조정
+                fig, ax = plt.subplots(figsize=(20, 10)) # 가로폭 조정
                 ax.plot(data['ds'], data['y'], label='실제', color='blue')
                 ax.plot(forecast['ds'], forecast['yhat'], label='예측', color='orange')
 
