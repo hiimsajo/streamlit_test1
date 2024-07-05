@@ -137,8 +137,12 @@ if uploaded_file is not None:
                 ax.set_title(f"{metric} 예측 그래프", fontproperties=font_properties)
                 plt.xticks(fontsize=14)  # x축 눈금 크기 설정
                 plt.yticks(fontsize=14)  # y축 눈금 크기 설정
-                plt.subplots_adjust(hspace=3)  # 그래프 사이에 간격 추가
+                # plt.subplots_adjust(hspace=3)  # 그래프 사이에 간격 추가
                 st.pyplot(fig)
+                
+                # 그래프 사이에 간격 추가
+                st.markdown("<div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
+
 
                 # # 모델 성능 평가
                 # y_true = valid_data['y'].values
