@@ -27,7 +27,7 @@ fm.fontManager.addfont(font_path)
 plt.rcParams['font.family'] = font_properties.get_name()
 # fontprop = fm.FontProperties(fname=font_path, size=12)
 # plt.rcParams['font.family'] = fontprop.get_name()
-plt.rcParams['axes.titlesize'] = 15  # 그래프 제목 크기
+plt.rcParams['axes.titlesize'] = 17  # 그래프 제목 크기
 plt.rcParams['axes.labelsize'] = 13  # 축 제목 크기
 plt.rcParams['xtick.labelsize'] = 11  # x축 눈금 크기
 plt.rcParams['ytick.labelsize'] = 11  # y축 눈금 크기
@@ -119,7 +119,7 @@ if uploaded_file is not None:
                 forecast = model.predict(future)
 
                 # 예측 결과 시각화
-                fig, ax = plt.subplots(figsize=(20, 10)) # 가로폭 조정
+                fig, ax = plt.subplots(figsize=(17, 8)) # 가로폭 조정
                 ax.plot(data['ds'], data['y'], label='실제', color='blue')
                 ax.plot(forecast['ds'], forecast['yhat'], label='예측', color='orange')
 
