@@ -6,6 +6,8 @@ import matplotlib.font_manager as fm
 from matplotlib import rc
 from streamlit_option_menu import option_menu
 import chardet
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+import numpy as np
 
 # css 파일 읽어오기
 def local_css(file_name):
@@ -51,9 +53,7 @@ if uploaded_file is not None:
             "이완기혈압": {"min": 30, "max": 120},
             "맥박": {"min": 20, "max": 150},
             "체온": {"min": 35, "max": 40},
-            "혈당": {"min": 20, "max": 500},
             "호흡": {"min": 5, "max":60},
-            "체중": {"min": 10, "max": 200},
         }
 
         # 환자 선택 기능
@@ -75,7 +75,7 @@ if uploaded_file is not None:
         patient_data['측정날짜'] = pd.to_datetime(patient_data['측정날짜'])
         patient_data = patient_data.sort_values('측정날짜')
 
-        metrics = ["수축기혈압", "이완기혈압", "맥박", "혈당", "체온", "호흡", "체중"]
+        metrics = ["수축기혈압", "이완기혈압", "맥박", "체온", "호흡"]
         
         # 이상치 기준선 설정
         thresholds = {
@@ -129,6 +129,20 @@ if uploaded_file is not None:
                 ax.legend(prop=font_properties, loc='upper right') # 범례박스 고정
                 ax.set_title(f"{metric} 예측 그래프", fontproperties=font_properties)
                 st.pyplot(fig)
+
+                # 모델 성능 평가
+                y_true = valid_data['y'].values
+                y_pred = forecast.loc[forecast['ds'].isin(valid_data['ds']), 'yhat'].values
+
+                mae = mean_absolute_error(y_true, y_pred)
+                mse = mean_squared_error(y_true, y_pred)
+                rmse = np.sqrt(mse)
+
+                st.write(f"### {metric} 성능 평가")
+                st.write(f"MAE (평균 절대 오차): {mae}")
+                st.write(f"MSE (평균 제곱 오차): {mse}")
+                st.write(f"RMSE (제곱근 평균 제곱 오차): {rmse}")
+
             else:
                 st.write(f"{metric}에 대한 유효한 데이터가 없습니다.")
     except Exception as e:
