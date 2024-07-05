@@ -18,7 +18,7 @@ local_css("style.css")
 # 한글폰트 적용하기
 font_path = 'font/NotoSansKR-VariableFont_wght.ttf'
 font_name = fm.FontProperties(fname=font_path).get_name()
-rc('font', family=font_name)
+plt.rcParams['font.family'] = font_name
 # fontprop = fm.FontProperties(fname=font_path, size=12)
 # plt.rcParams['font.family'] = fontprop.get_name()
 
