@@ -6,7 +6,7 @@ import matplotlib.font_manager as fm
 from matplotlib import rc
 from streamlit_option_menu import option_menu
 import chardet
-from sklearn.metrics import mean_absolute_error, mean_squared_error
+# from sklearn.metrics import mean_absolute_error, mean_squared_error
 import numpy as np
 
 # css 파일 읽어오기
@@ -112,7 +112,7 @@ if uploaded_file is not None:
                 forecast = model.predict(future)
 
                 # 예측 결과 시각화
-                fig, ax = plt.subplots()
+                fig, ax = plt.subplots(figsize=(12, 6)) # 가로폭 조정
                 ax.plot(data['ds'], data['y'], label='실제', color='blue')
                 ax.plot(forecast['ds'], forecast['yhat'], label='예측', color='orange')
 
@@ -130,18 +130,18 @@ if uploaded_file is not None:
                 ax.set_title(f"{metric} 예측 그래프", fontproperties=font_properties)
                 st.pyplot(fig)
 
-                # 모델 성능 평가
-                y_true = valid_data['y'].values
-                y_pred = forecast.loc[forecast['ds'].isin(valid_data['ds']), 'yhat'].values
+                # # 모델 성능 평가
+                # y_true = valid_data['y'].values
+                # y_pred = forecast.loc[forecast['ds'].isin(valid_data['ds']), 'yhat'].values
 
-                mae = mean_absolute_error(y_true, y_pred)
-                mse = mean_squared_error(y_true, y_pred)
-                rmse = np.sqrt(mse)
+                # mae = mean_absolute_error(y_true, y_pred)
+                # mse = mean_squared_error(y_true, y_pred)
+                # rmse = np.sqrt(mse)
 
-                st.write(f"### {metric} 성능 평가")
-                st.write(f"MAE (평균 절대 오차): {mae}")
-                st.write(f"MSE (평균 제곱 오차): {mse}")
-                st.write(f"RMSE (제곱근 평균 제곱 오차): {rmse}")
+                # st.write(f"### {metric} 성능 평가")
+                # st.write(f"MAE (평균 절대 오차): {mae}")
+                # st.write(f"MSE (평균 제곱 오차): {mse}")
+                # st.write(f"RMSE (제곱근 평균 제곱 오차): {rmse}")
 
             else:
                 st.write(f"{metric}에 대한 유효한 데이터가 없습니다.")
