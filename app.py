@@ -10,7 +10,7 @@ import chardet
 import numpy as np
 
 # 페이지 설정
-# st.set_page_config(layout="wide")
+st.set_page_config(layout="wide")
 
 # css 파일 읽어오기
 def local_css(file_name):
@@ -119,7 +119,7 @@ if uploaded_file is not None:
                 forecast = model.predict(future)
 
                 # 예측 결과 시각화
-                fig, ax = plt.subplots(figsize=(16, 8)) # 가로폭 조정
+                fig, ax = plt.subplots(figsize=(15, 6)) # 가로폭 조정
                 ax.plot(data['ds'], data['y'], label='실제', color='blue')
                 ax.plot(forecast['ds'], forecast['yhat'], label='예측', color='orange')
 
@@ -137,7 +137,7 @@ if uploaded_file is not None:
                 ax.set_title(f"{metric} 예측 그래프", fontproperties=font_properties)
                 plt.xticks(fontsize=14)  # x축 눈금 크기 설정
                 plt.yticks(fontsize=14)  # y축 눈금 크기 설정
-                plt.subplots_adjust(hspace=0.8)  # 그래프 사이에 간격 추가
+                plt.subplots_adjust(hspace=3)  # 그래프 사이에 간격 추가
                 st.pyplot(fig)
 
                 # # 모델 성능 평가
