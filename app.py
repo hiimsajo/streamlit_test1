@@ -94,13 +94,15 @@ if uploaded_file is not None:
             ax.plot(data['ds'], data['y'], label='실제', color='blue')
             ax.plot(forecast['ds'], forecast['yhat'], label='예측', color='orange')
 
-            # 기준선 표시
-            ax.axhline(y=thresholds[metric]["upper"], color='green', linestyle='--', label='상한선')
-            ax.axhline(y=thresholds[metric]["lower"], color='green', linestyle='--', label='하한선')
+            # 이상치 기준선이 존재하는 경우에만 기준선 및 이상치 표시
+            if metric in thresholds:
+                # 기준선 표시
+                ax.axhline(y=thresholds[metric]["upper"], color='green', linestyle='--', label='상한선')
+                ax.axhline(y=thresholds[metric]["lower"], color='green', linestyle='--', label='하한선')
 
-            # 이상치 표시
-            outliers = data[(data['y'] > thresholds[metric]["upper"]) | (data['y'] < thresholds[metric]["lower"])]
-            ax.scatter(outliers['ds'], outliers['y'], color='red', label='이상치')
+                # 이상치 표시
+                outliers = data[(data['y'] > thresholds[metric]["upper"]) | (data['y'] < thresholds[metric]["lower"])]
+                ax.scatter(outliers['ds'], outliers['y'], color='red', label='이상치')
             
             ax.legend(prop=font_properties)
             ax.set_title(f"{metric} 예측 및 이상치 표시", fontproperties=font_properties)
