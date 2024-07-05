@@ -45,6 +45,17 @@ if uploaded_file is not None:
         st.write("업로드된 데이터:")
         st.write(df.head())
 
+        # 삭제 기준 설정
+        delete_thredholds = {
+            "수축기혈압": {"min": 50, "max":200},
+            "이완기혈압": {"min": 30, "max": 120},
+            "맥박": {"min": 20, "max": 150},
+            "체온": {"min": 53, "max": 40},
+            "혈당": {"min": 20, "max": 500},
+            "호흡": {"min": 5, "max":60},
+            "체중": {"min": 10, "max": 200},
+        }
+
         # 환자 선택 기능
         option = st.selectbox("고유번호 또는 이름으로 선택하세요", ["고유번호", "이름"])
         if option == "고유번호":
@@ -81,32 +92,45 @@ if uploaded_file is not None:
             # Prophet 모델을 사용하기 위한 데이터 준비
             data = patient_data[["측정날짜", metric]].rename(columns={"측정날짜": "ds", metric: "y"})
 
-            # Prophet 모델 생성 및 학습
-            model = Prophet()
-            model.fit(data)
+            # 각 컬럼별로 말도 안되는 값 None으로 지정하는 작업
+            if metric in delete_thredholds:
+                limits = delete_thredholds[metric]
+                data.loc[(data['y'] < limits["min"]) | (data['y'] > limits["max"]), 'y'] = None
 
-            # 미래 데이터프레임 생성 및 예측
-            future = model.make_future_dataframe(periods=30)  # 30일 예측
-            forecast = model.predict(future)
+            # None으로 지정된 값을 포함한 행 제거(어차피 독립적으로 수행되기 때문에 행단위로 삭제해도 됨)
+            valid_data = data.dropna(subset=['y'])
 
-            # 예측 결과 시각화
-            fig, ax = plt.subplots()
-            ax.plot(data['ds'], data['y'], label='실제', color='blue')
-            ax.plot(forecast['ds'], forecast['yhat'], label='예측', color='orange')
+            # 유효한 데이터가 있는 경우에만 예측 수행
+            if len(valid_data) > 0: #데이터 길이로 판단
+                # Prophet 모델 생성 및 학습
+                model = Prophet()
+                model.fit(data)
 
-            # 이상치 기준선이 존재하는 경우에만 기준선 및 이상치 표시
-            if metric in thresholds:
-                # 기준선 표시
-                ax.axhline(y=thresholds[metric]["upper"], color='green', linestyle='--', label='상한선')
-                ax.axhline(y=thresholds[metric]["lower"], color='green', linestyle='--', label='하한선')
 
-                # 이상치 표시
-                outliers = data[(data['y'] > thresholds[metric]["upper"]) | (data['y'] < thresholds[metric]["lower"])]
-                ax.scatter(outliers['ds'], outliers['y'], color='red', label='이상치')
+                # 미래 데이터프레임 생성 및 예측
+                future = model.make_future_dataframe(periods=30)  # 30일 예측
+                forecast = model.predict(future)
+
+                # 예측 결과 시각화
+                fig, ax = plt.subplots()
+                ax.plot(data['ds'], data['y'], label='실제', color='blue')
+                ax.plot(forecast['ds'], forecast['yhat'], label='예측', color='orange')
+
+                # 이상치 기준선이 존재하는 경우에만 기준선 및 이상치 표시
+                if metric in thresholds:
+                    # 기준선 표시
+                    ax.axhline(y=thresholds[metric]["upper"], color='green', linestyle='--', label='상한선')
+                    ax.axhline(y=thresholds[metric]["lower"], color='green', linestyle='--', label='하한선')
+
+                    # 이상치 표시
+                    outliers = data[(data['y'] > thresholds[metric]["upper"]) | (data['y'] < thresholds[metric]["lower"])]
+                    ax.scatter(outliers['ds'], outliers['y'], color='red', label='이상치')
             
-            ax.legend(prop=font_properties)
-            ax.set_title(f"{metric} 예측 및 이상치 표시", fontproperties=font_properties)
-            st.pyplot(fig)
+                ax.legend(prop=font_properties)
+                ax.set_title(f"{metric} 예측 그래프", fontproperties=font_properties)
+                st.pyplot(fig)
+            else:
+                st.write(f"{metric}에 대한 유효한 데이터가 없습니다.")
     except Exception as e:
         st.error(f"파일을 처리하는 중 오류가 발생했습니다: {e}")
 else:
