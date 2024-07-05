@@ -57,19 +57,19 @@ if uploaded_file is not None:
         }
 
         # 환자 선택 기능
-        option = st.selectbox("번호 또는 이름으로 선택하세요", ["번호", "이름"])
-        if option == "번호":
-            patients = df["번호"].unique()
-        else:
+        option = st.selectbox("이름 또는 번호로 선택하세요", ["이름", "번호"])
+        if option == "이름":
             patients = df["이름"].unique()
+        else:
+            patients = df["번호"].unique()
 
         selected_patient = st.selectbox(f"{option}을 선택하세요", patients)
 
         # 선택한 환자의 데이터 필터링
-        if option == "번호":
-            patient_data = df[df["번호"] == selected_patient]
-        else:
+        if option == "이름":
             patient_data = df[df["이름"] == selected_patient]
+        else:
+            patient_data = df[df["번호"] == selected_patient]
 
         # 시계열 예측을 위한 데이터 준비
         patient_data['측정날짜'] = pd.to_datetime(patient_data['측정날짜'])
