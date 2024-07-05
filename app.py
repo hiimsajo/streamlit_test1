@@ -57,17 +57,17 @@ if uploaded_file is not None:
         }
 
         # 환자 선택 기능
-        option = st.selectbox("고유번호 또는 이름으로 선택하세요", ["고유번호", "이름"])
-        if option == "고유번호":
-            patients = df["고유번호"].unique()
+        option = st.selectbox("번호 또는 이름으로 선택하세요", ["번호", "이름"])
+        if option == "번호":
+            patients = df["번호"].unique()
         else:
             patients = df["이름"].unique()
 
         selected_patient = st.selectbox(f"{option}을 선택하세요", patients)
 
         # 선택한 환자의 데이터 필터링
-        if option == "고유번호":
-            patient_data = df[df["고유번호"] == selected_patient]
+        if option == "번호":
+            patient_data = df[df["번호"] == selected_patient]
         else:
             patient_data = df[df["이름"] == selected_patient]
 
@@ -126,7 +126,7 @@ if uploaded_file is not None:
                     outliers = data[(data['y'] > thresholds[metric]["upper"]) | (data['y'] < thresholds[metric]["lower"])]
                     ax.scatter(outliers['ds'], outliers['y'], color='red', label='이상치')
             
-                ax.legend(prop=font_properties)
+                ax.legend(prop=font_properties, loc='upper right') # 범례박스 고정
                 ax.set_title(f"{metric} 예측 그래프", fontproperties=font_properties)
                 st.pyplot(fig)
             else:
