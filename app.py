@@ -17,8 +17,9 @@ local_css("style.css")
 
 # 한글폰트 적용하기
 font_path = 'font/NotoSansKR-VariableFont_wght.ttf'
-font_name = fm.FontProperties(fname=font_path).get_name()
-plt.rcParams['font.family'] = font_name
+font_properties = fm.FontProperties(fname=font_path)
+fm.fontManager.addfont(font_path)
+plt.rcParams['font.family'] = font_properties.get_name()
 # fontprop = fm.FontProperties(fname=font_path, size=12)
 # plt.rcParams['font.family'] = fontprop.get_name()
 
@@ -101,8 +102,8 @@ if uploaded_file is not None:
             outliers = data[(data['y'] > thresholds[metric]["upper"]) | (data['y'] < thresholds[metric]["lower"])]
             ax.scatter(outliers['ds'], outliers['y'], color='red', label='이상치')
             
-            ax.legend()
-            ax.set_title(f"{metric} 예측 및 이상치 표시")
+            ax.legend(prop=font_properties)
+            ax.set_title(f"{metric} 예측 및 이상치 표시", fontproperties=font_properties)
             st.pyplot(fig)
     except Exception as e:
         st.error(f"파일을 처리하는 중 오류가 발생했습니다: {e}")
