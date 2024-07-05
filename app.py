@@ -10,7 +10,7 @@ import chardet
 import numpy as np
 
 # 페이지 설정
-st.set_page_config(layout="wide")
+# st.set_page_config(layout="wide")
 
 # css 파일 읽어오기
 def local_css(file_name):
