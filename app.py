@@ -50,7 +50,7 @@ def run_query(connection, query):
 
 # 연결된 디비에서 데이터 가져와 사용하기
 def main():
-    st.title("<h1 style='color:rgb(10, 65, 194);'>AI Health data Monitoring and Prediction System</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color:rgb(10, 65, 194);'>AI Health data Monitoring and Prediction System</h1>", unsafe_allow_html=True)
    
     try:
         #디비연결
