@@ -1,0 +1,4 @@
+instantclient-basic-windows.x64-21.14.0.0.0dbru/*.so filter=lfs diff=lfs merge=lfs -text
+instantclient-basic-windows.x64-21.14.0.0.0dbru/instantclient_21_14/*.dll filter=lfs diff=lfs merge=lfs -text
+instantclient-basic-windows.x64-21.14.0.0.0dbru/instantclient_21_14/*.so filter=lfs diff=lfs merge=lfs -text
+instantclient-basic-windows.x64-21.14.0.0.0dbru/*.dll filter=lfs diff=lfs merge=lfs -text
