@@ -11,9 +11,13 @@ import chardet
 import cx_Oracle
 import numpy as np
 
-# 환경 변수 설정, txt에 os추가하려했는데 파이썬 기본 모듈이래서 추가필요없다함
-os.environ['PATH'] = os.path.join(os.path.dirname(__file__), 'instantclient_21_14') + os.pathsep + os.environ['PATH']
+# Oracle Instant Client 경로 설정
+client_path = os.path.join(os.path.dirname(__file__), 'instantclient-basic-windows.x64-21.14.0.0.0dbru', 'instantclient_21_14')
+os.environ['PATH'] = client_path + os.pathsep + os.environ['PATH']
+os.environ['LD_LIBRARY_PATH'] = client_path + os.pathsep + os.environ.get('LD_LIBRARY_PATH', '')
 
+print("Oracle Instant Client PATH:", os.environ['PATH'])
+print("Oracle Instant Client LD_LIBRARY_PATH:", os.environ['LD_LIBRARY_PATH'])
 
 # 페이지 설정
 st.set_page_config(layout="wide")
