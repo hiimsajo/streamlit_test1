@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import pandas as pd
 from prophet import Prophet
@@ -7,7 +8,12 @@ from matplotlib import rc
 from streamlit_option_menu import option_menu
 import chardet
 # from sklearn.metrics import mean_absolute_error, mean_squared_error
+import cx_Oracle
 import numpy as np
+
+# 환경 변수 설정, txt에 os추가하려했는데 파이썬 기본 모듈이래서 추가필요없다함
+os.environ['PATH'] = os.path.join(os.path.dirname(__file__), 'instantclient_21_14') + os.pathsep + os.environ['PATH']
+
 
 # 페이지 설정
 st.set_page_config(layout="wide")
@@ -32,26 +38,35 @@ plt.rcParams['axes.labelsize'] = 13  # 축 제목 크기
 plt.rcParams['xtick.labelsize'] = 11  # x축 눈금 크기
 plt.rcParams['ytick.labelsize'] = 11  # y축 눈금 크기
 
-# 파일 인코딩 감지 함수
-def detect_encoding(file):
-    raw_data = file.read()
-    result = chardet.detect(raw_data)
-    file.seek(0)  # 파일 포인터를 다시 처음으로
-    return result['encoding']
+# 오라클 디비 연결 함수
+@st.cache_data
+def connect_to_oracle():
+    username = "admin"
+    password = "Testdw123400!"
+    dsn = "testdw_high"
+    connection = cx_Oracle.connect(user=username, password=password, dsn=dsn)
+    return connection
 
-# 파일 업로드
-st.markdown("<h1 class='title'>AI Health data Monitoring and Prediction System</h1>", unsafe_allow_html=True)
+# sql실행하고 데이터프레임 반환
+@st.cache_data
+def run_query(connection, query):
+    df = pd.read_sql(query, con=connection)
+    return df 
 
-uploaded_file = st.file_uploader("CSV 파일을 업로드하세요", type=["csv"])
-
-if uploaded_file is not None:
+# 연결된 디비에서 데이터 가져와 사용하기
+def main():
+    st.markdown("<h1 style='color:rgb(10, 65, 194);'>AI Health data Monitoring and Prediction System</h1>", unsafe_allow_html=True)
+   
     try:
-        # CSV 파일 인코딩 감지 및 데이터프레임으로 읽기
-        encoding = detect_encoding(uploaded_file)
-        df = pd.read_csv(uploaded_file, encoding=encoding)
+        #디비연결
+        connection = connect_to_oracle()
+
+        #데이터 가져오기
+        query = "SELECT * FROM patients"
+        df = run_query(connection, query)
 
         # 데이터 확인
-        st.write("업로드된 데이터:")
+        st.write("DB에서 가져온 데이터:")
         st.write(df.head())
 
         # 삭제 기준 설정
@@ -159,7 +174,10 @@ if uploaded_file is not None:
 
             else:
                 st.write(f"{metric}에 대한 유효한 데이터가 없습니다.")
+        if connection:
+            connection.close()        
     except Exception as e:
         st.error(f"파일을 처리하는 중 오류가 발생했습니다: {e}")
-else:
-    st.info("CSV 파일을 업로드하세요.")
+if __name__=="__main__":
+    main()        
+
