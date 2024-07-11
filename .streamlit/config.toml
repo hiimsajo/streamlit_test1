@@ -1,7 +1,7 @@
 [server]
 headless = true
 enableCORS = false
-port = $PORT
+port = 8501
 
 [environment]
 LD_LIBRARY_PATH = "/app/instantclient-basic-windows.x64-21.14.0.0.0dbru/instantclient_21_14"
