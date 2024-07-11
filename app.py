@@ -16,9 +16,9 @@ client_path = os.path.join(os.path.dirname(__file__), 'instantclient-basic-windo
 os.environ['PATH'] = client_path + os.pathsep + os.environ['PATH']
 os.environ['LD_LIBRARY_PATH'] = client_path + os.pathsep + os.environ.get('LD_LIBRARY_PATH', '')
 
-
-# print("Oracle Instant Client PATH:", os.environ['PATH'])
-# print("Oracle Instant Client LD_LIBRARY_PATH:", os.environ['LD_LIBRARY_PATH'])
+# 확인을 위해 경로 출력
+st.write("Oracle Instant Client PATH:", os.environ['PATH'])
+st.write("Oracle Instant Client LD_LIBRARY_PATH:", os.environ['LD_LIBRARY_PATH'])
 
 # 페이지 설정
 st.set_page_config(layout="wide")
