@@ -10,6 +10,9 @@ import chardet
 import cx_Oracle
 import numpy as np
 
+# 페이지 설정
+st.set_page_config(layout="wide")
+
 # Oracle Instant Client 경로 설정
 client_path = os.path.join(os.path.dirname(__file__), 'instantclient-basic-windows.x64-21.14.0.0.0dbru', 'instantclient_21_14')
 os.environ['PATH'] = client_path + os.pathsep + os.environ['PATH']
@@ -18,12 +21,6 @@ os.environ['LD_LIBRARY_PATH'] = client_path + os.pathsep + os.environ.get('LD_LI
 # 확인을 위해 경로 출력
 st.write("Oracle Instant Client PATH:", os.environ['PATH'])
 st.write("Oracle Instant Client LD_LIBRARY_PATH:", os.environ['LD_LIBRARY_PATH'])
-
-# 페이지 설정
-try:
-    st.set_page_config(layout="wide")
-except Exception as e:
-    st.error(f"페이지 설정 중 오류가 발생했습니다: {e}")
 
 # css 파일 읽어오기
 def local_css(file_name):
@@ -55,8 +52,8 @@ plt.rcParams['ytick.labelsize'] = 11  # y축 눈금 크기
 def connect_to_oracle():
     try:
         username = "admin"
-        password = "Testdw123400!"
-        dsn = "testdw_high"
+        password = "비밀번호"
+        dsn = "testdb_high"
         connection = cx_Oracle.connect(user=username, password=password, dsn=dsn)
         return connection
     except Exception as e:
