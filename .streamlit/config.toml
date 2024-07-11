@@ -1,0 +1,8 @@
+[server]
+headless = true
+enableCORS = false
+port = $PORT
+
+[environment]
+LD_LIBRARY_PATH = "/app/instantclient-basic-windows.x64-21.14.0.0.0dbru/instantclient_21_14"
+PATH = "/app/instantclient-basic-windows.x64-21.14.0.0.0dbru/instantclient_21_14:$PATH"
