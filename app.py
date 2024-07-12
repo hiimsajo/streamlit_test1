@@ -15,12 +15,15 @@ import numpy as np
 st.set_page_config(layout="wide")
 
 # Oracle Instant Client 경로 설정
-client_path = os.path.join(os.path.dirname(__file__), 'instantclient-basic-linux.x64-23.4.0.24.05', 'instantclient_23_4')
+client_path = os.path.join(os.path.dirname(__file__), 'instantclient-basic-linux.x64-21.14.0.0.0dbru', 'instantclient_21_14')
 os.environ['PATH'] = client_path + os.pathsep + os.environ['PATH']
 os.environ['LD_LIBRARY_PATH'] = client_path + os.pathsep + os.environ.get('LD_LIBRARY_PATH', '')
 
 # Oracle Client 초기화
-oracledb.init_oracle_client(lib_dir=client_path)
+try:
+    oracledb.init_oracle_client(lib_dir=client_path)
+except Exception as e:
+    st.error(f"Oracle Client 초기화 중 오류가 발생했습니다: {e}")
 
 # 확인을 위해 경로 출력
 st.write("Oracle Instant Client PATH:", os.environ['PATH'])
