@@ -8,6 +8,7 @@ from matplotlib import rc
 from streamlit_option_menu import option_menu
 import chardet
 import cx_Oracle
+import oracledb
 import numpy as np
 
 # 페이지 설정
@@ -17,6 +18,9 @@ st.set_page_config(layout="wide")
 client_path = os.path.join(os.path.dirname(__file__), 'instantclient-basic-linux.x64-23.4.0.24.05', 'instantclient_23_4')
 os.environ['PATH'] = client_path + os.pathsep + os.environ['PATH']
 os.environ['LD_LIBRARY_PATH'] = client_path + os.pathsep + os.environ.get('LD_LIBRARY_PATH', '')
+
+# Oracle Client 초기화
+oracledb.init_oracle_client(lib_dir=client_path)
 
 # 확인을 위해 경로 출력
 st.write("Oracle Instant Client PATH:", os.environ['PATH'])
@@ -51,12 +55,9 @@ plt.rcParams['ytick.labelsize'] = 11  # y축 눈금 크기
 @st.cache_data
 def connect_to_oracle():
     try:
-        username = "admin"
-        password = "비밀번호"
-        dsn = "testdb_high"
-        connection = cx_Oracle.connect(user=username, password=password, dsn=dsn)
+        connection = oracledb.connect(user="admin", password="Testdw123400!", dsn="testdw_high")
         return connection
-    except Exception as e:
+    except oracledb.Error as e:
         st.error(f"오라클 데이터베이스 연결 중 오류가 발생했습니다: {e}")
         return None
 
@@ -74,10 +75,11 @@ def run_query(connection, query):
 def main():
     st.markdown("<h1 style='color:rgb(10, 65, 194);'>AI Health data Monitoring and Prediction System</h1>", unsafe_allow_html=True)
    
-    try:
-        # 디비 연결
-        connection = connect_to_oracle()
+    connection = connect_to_oracle()
+    if connection is None:
+        return
 
+    try:
         # 데이터 가져오기
         query = "SELECT * FROM patients"
         df = run_query(connection, query)
@@ -88,11 +90,11 @@ def main():
 
         # 삭제 기준 설정
         delete_thredholds = {
-            "수축기혈압": {"min": 50, "max":200},
+            "수축기혈압": {"min": 50, "max": 200},
             "이완기혈압": {"min": 30, "max": 120},
             "맥박": {"min": 20, "max": 150},
             "체온": {"min": 35, "max": 40},
-            "호흡": {"min": 5, "max":60},
+            "호흡": {"min": 5, "max": 60},
         }
 
         # 환자 선택 기능
@@ -135,11 +137,11 @@ def main():
                 limits = delete_thredholds[metric]
                 data.loc[(data['y'] < limits["min"]) | (data['y'] > limits["max"]), 'y'] = None
 
-            # None으로 지정된 값을 포함한 행 제거
+            # None으로 지정된 값을 포함한 행 제거(어차피 독립적으로 수행되기 때문에 행단위로 삭제해도 됨)
             valid_data = data.dropna(subset=['y'])
 
             # 유효한 데이터가 있는 경우에만 예측 수행
-            if len(valid_data) > 0:
+            if len(valid_data) > 0: # 데이터 길이로 판단
                 # Prophet 모델 생성 및 학습
                 model = Prophet()
                 model.fit(data)
@@ -149,7 +151,7 @@ def main():
                 forecast = model.predict(future)
 
                 # 예측 결과 시각화
-                fig, ax = plt.subplots(figsize=(15, 6))
+                fig, ax = plt.subplots(figsize=(15, 6))  # 가로폭 조정
                 ax.plot(data['ds'], data['y'], label='실제', color='blue')
                 ax.plot(forecast['ds'], forecast['yhat'], label='예측', color='orange')
 
@@ -163,19 +165,21 @@ def main():
                     outliers = data[(data['y'] > thresholds[metric]["upper"]) | (data['y'] < thresholds[metric]["lower"])]
                     ax.scatter(outliers['ds'], outliers['y'], color='red', label='이상치')
             
-                ax.legend(prop=font_properties, loc='upper right')
+                ax.legend(prop=font_properties, loc='upper right')  # 범례박스 고정
                 ax.set_title(f"{metric} 예측 그래프", fontproperties=font_properties)
-                plt.xticks(fontsize=14)
-                plt.yticks(fontsize=14)
+                plt.xticks(fontsize=14)  # x축 눈금 크기 설정
+                plt.yticks(fontsize=14)  # y축 눈금 크기 설정
                 st.pyplot(fig)
                 
+                # 그래프 사이에 간격 추가
                 st.markdown("<div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
-
             else:
                 st.write(f"{metric}에 대한 유효한 데이터가 없습니다.")
-        if connection:
-            connection.close()        
     except Exception as e:
-        st.error(f"파일을 처리하는 중 오류가 발생했습니다: {e}")
+        st.error(f"오류가 발생했습니다: {e}")
+    finally:
+        if connection:
+            connection.close()
+
 if __name__ == "__main__":
     main()
