@@ -1,0 +1,8 @@
+testdw_high = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.ap-chuncheon-1.oraclecloud.com))(connect_data=(service_name=g7e6e81d57769f1_testdw_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+testdw_low = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.ap-chuncheon-1.oraclecloud.com))(connect_data=(service_name=g7e6e81d57769f1_testdw_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+testdw_medium = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.ap-chuncheon-1.oraclecloud.com))(connect_data=(service_name=g7e6e81d57769f1_testdw_medium.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+
+
