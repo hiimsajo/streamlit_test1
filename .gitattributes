@@ -1,1 +1,2 @@
 instantclient-basic-linux.x64-21.14.0.0.0dbru/instantclient_21_14/*.so filter=lfs diff=lfs merge=lfs -text
+instantclient-basic-linux.x64-21.14.0.0.0dbru/instantclient_21_14/libclntsh.so.21.1 filter=lfs diff=lfs merge=lfs -text
