@@ -8,7 +8,8 @@
 streamlit
 pandas
 prophet
-matplotlib
+# matplotlib
+plotly
 streamlit-option-menu
 numpy<2.0
 chardet
