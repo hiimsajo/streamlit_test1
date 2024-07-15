@@ -128,7 +128,7 @@ if uploaded_file is not None:
                 forecast = model.predict(future)
 
                 # 예측 결과 시각화
-                fig.add = go,Figure()
+                fig = go.Figure()
 
                 fig.add_trace(go.Scatter(x=data['ds'], y=data['y'], mode='markers', name='실제', marker=dict(color='blue')))
                 fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines', name='예측', line=dict(color='orange')))
