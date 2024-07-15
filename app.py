@@ -83,7 +83,7 @@ if uploaded_file is not None:
         patient_data['측정날짜'] = pd.to_datetime(patient_data['측정날짜'])
         patient_data = patient_data.sort_values('측정날짜')
 
-        metrics = ["수축기혈압", "이완기혈압", "맥박", "체온", "호흡"]
+        metrics = ["수축기혈압", "이완기혈압", "맥박", "체온", "혈당", "호흡", "체중"]
         
         # 이상치 기준선 설정
         thresholds = {
