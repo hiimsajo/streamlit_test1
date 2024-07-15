@@ -141,6 +141,8 @@ if uploaded_file is not None:
                 plt.yticks(fontsize=14)  # y축 눈금 크기 설정
                 plt.subplots_adjust(hspace=0.8)  # 그래프 사이에 간격 추가
                 st.pyplot(fig)
+                # 그래프 사이에 간격 추가
+                st.markdown("<div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
 
                 # # 모델 성능 평가
                 # y_true = valid_data['y'].values
