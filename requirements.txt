@@ -15,4 +15,4 @@ numpy<2.0
 chardet
 scikit-learn
 tensorflow
-protobuf
+protobuf==3.20.*
