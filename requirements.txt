@@ -14,5 +14,5 @@ streamlit-option-menu
 numpy<2.0
 chardet
 scikit-learn
-tensorflow
+tensorflow-cpu
 protobuf==3.20.*
