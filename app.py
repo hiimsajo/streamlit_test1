@@ -7,8 +7,13 @@ import matplotlib.font_manager as fm
 from matplotlib import rc
 from streamlit_option_menu import option_menu
 import chardet
-# from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.preprocessing import MinMaxScaler
 import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense, Dropout
+from tensorflow.keras.callbacks import EarlyStopping
 
 # 페이지 설정
 st.set_page_config(layout="wide")
@@ -28,6 +33,15 @@ def detect_encoding(file):
     result = chardet.detect(raw_data)
     file.seek(0)  # 파일 포인터를 다시 처음으로
     return result['encoding']
+
+# LSTM 모델용 전처리
+def create_lstm_dataset(data, look_back=1):
+    X, Y = [], []
+    for i in range(len(data)-look_back):
+        a = data[i:(i+look_back), 0]
+        X.append(a)
+        Y.append(data[i + look_back, 0])
+    return np.array(X), np.array(Y)
 
 # 파일 업로드
 st.markdown("<h1 class='title'>AI Health data Monitoring and Prediction System</h1>", unsafe_allow_html=True)
@@ -84,7 +98,13 @@ if uploaded_file is not None:
             "체온": {"upper": 37, "lower": 36},
         }
 
-        # Plotly layout 설정
+        # 예측 모델 선택
+        model_option = st.selectbox("예측 모델을 선택하세요", ["Prophet", "LSTM"])
+
+        # 다양한 look_back 값 설정 (주간, 월간, 계절적 패턴 고려)
+        look_back_values = [7, 30, 90, 180, 365]
+
+        # Plotly layout 설정 (한글 폰트)
         font_family = "Noto Sans KR"  # 한글 폰트를 사용
         layout = go.Layout(
             font=dict(family=font_family, size=14),
@@ -95,63 +115,93 @@ if uploaded_file is not None:
 
         for metric in metrics:
             st.subheader(f"{metric} 예측")
-            
-            # Prophet 모델을 사용하기 위한 데이터 준비
+
+            # 데이터 전처리
             data = patient_data[["측정날짜", metric]].rename(columns={"측정날짜": "ds", metric: "y"})
 
-            # 각 컬럼별로 말도 안되는 값 None으로 지정하는 작업
             if metric in delete_thredholds:
                 limits = delete_thredholds[metric]
                 data.loc[(data['y'] < limits["min"]) | (data['y'] > limits["max"]), 'y'] = None
 
-            # None으로 지정된 값을 포함한 행 제거(어차피 독립적으로 수행되기 때문에 행단위로 삭제해도 됨)
             valid_data = data.dropna(subset=['y'])
 
-            # 유효한 데이터가 있는 경우에만 예측 수행
-            if len(valid_data) > 0: #데이터 길이로 판단
-                # Prophet 모델 생성 및 학습
-                model = Prophet()
-                model.fit(data)
+            if len(valid_data) > 0:
+                if model_option == "Prophet":
+                    model = Prophet()
+                    model.fit(valid_data)
+                    future = model.make_future_dataframe(periods=30)
+                    forecast = model.predict(future)
 
-
-                # 미래 데이터프레임 생성 및 예측
-                future = model.make_future_dataframe(periods=30)  # 30일 예측
-                forecast = model.predict(future)
-
-                # 예측 결과 시각화
-                fig = go.Figure()
-
-                fig.add_trace(go.Scatter(x=data['ds'], y=data['y'], mode='markers', name='실제', marker=dict(color='blue')))
-                fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines', name='예측', line=dict(color='orange')))
+                    fig = go.Figure()
+                    fig.add_trace(go.Scatter(x=valid_data['ds'], y=valid_data['y'], mode='markers', name='실제', marker=dict(color='blue')))
+                    fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines', name='예측', line=dict(color='orange')))
                 
-                # 이상치 기준선이 존재하는 경우에만 기준선 및 이상치 표시
+                elif model_option == "LSTM":
+                    scaler = MinMaxScaler(feature_range=(0, 1))
+                    scaled_data = scaler.fit_transform(valid_data[['y']].values)
+
+                    best_look_back = 0
+                    best_mse = float("inf")
+                    best_predictions = None
+                    best_future_dates = None
+
+                    for look_back in look_back_values:
+                        X, Y = create_lstm_dataset(scaled_data, look_back)
+                        X = np.reshape(X, (X.shape[0], X.shape[1], 1))
+
+                        model = Sequential()
+                        model.add(LSTM(50, return_sequences=True, input_shape=(look_back, 1)))
+                        model.add(Dropout(0.2))  # 드롭아웃 추가
+                        model.add(LSTM(50, return_sequences=False))
+                        model.add(Dropout(0.2))  # 드롭아웃 추가
+                        model.add(Dense(25))
+                        model.add(Dense(1))
+
+                        model.compile(optimizer='adam', loss='mean_squared_error')
+
+                        # 조기 종료 콜백 추가
+                        early_stopping = EarlyStopping(monitor='loss', patience=10, restore_best_weights=True)
+                        model.fit(X, Y, batch_size=1, epochs=100, callbacks=[early_stopping], verbose=0)
+
+                        # 미래 예측
+                        test_data = scaled_data[-look_back:]
+                        future_predictions = []
+                        for _ in range(30):  # 30일 예측
+                            test_data = np.reshape(test_data, (1, look_back, 1))
+                            prediction = model.predict(test_data)
+                            future_predictions.append(prediction[0][0])
+                            test_data = np.append(test_data[0][1:], prediction)[np.newaxis, :, np.newaxis]
+
+                        future_predictions = scaler.inverse_transform(np.array(future_predictions).reshape(-1, 1))
+
+                        future_dates = pd.date_range(start=valid_data['ds'].iloc[-1], periods=31, closed='right')
+                        future_df = pd.DataFrame(data={'ds': future_dates, 'yhat': future_predictions.flatten()})
+
+                        mse = mean_squared_error(valid_data['y'][-30:], future_predictions[:30])
+
+                        if mse < best_mse:
+                            best_mse = mse
+                            best_look_back = look_back
+                            best_predictions = future_predictions
+                            best_future_dates = future_dates
+
+                    st.write(f"LSTM 학습을 위한 {metric}의 최적의 과거참조기간은: {best_look_back}, 그리고 이때의 MSE: {best_mse}")
+
+                    fig = go.Figure()
+                    fig.add_trace(go.Scatter(x=valid_data['ds'], y=valid_data['y'], mode='markers', name='실제', marker=dict(color='blue')))
+                    fig.add_trace(go.Scatter(x=best_future_dates, y=best_predictions.flatten(), mode='lines', name='예측', line=dict(color='orange')))
+
                 if metric in thresholds:
-                    # 기준선 표시
                     fig.add_hline(y=thresholds[metric]["upper"], line=dict(color='green', dash='dash'), name='상한선')
                     fig.add_hline(y=thresholds[metric]["lower"], line=dict(color='green', dash='dash'), name='하한선')
-                  
-                    # 이상치 표시
-                    outliers = data[(data['y'] > thresholds[metric]["upper"]) | (data['y'] < thresholds[metric]["lower"])]
+                    outliers = valid_data[(valid_data['y'] > thresholds[metric]["upper"]) | (valid_data['y'] < thresholds[metric]["lower"])]
                     fig.add_trace(go.Scatter(x=outliers['ds'], y=outliers['y'], mode='markers', name='이상치', marker=dict(color='red')))
-                                
+
+                fig.update_layout(layout)
                 fig.update_layout(title=f"{metric} 예측 그래프", xaxis_title='날짜', yaxis_title=metric)
                 st.plotly_chart(fig)
-                
-                # 그래프 사이에 간격 추가
+
                 st.markdown("<div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
-
-                # # 모델 성능 평가
-                # y_true = valid_data['y'].values
-                # y_pred = forecast.loc[forecast['ds'].isin(valid_data['ds']), 'yhat'].values
-
-                # mae = mean_absolute_error(y_true, y_pred)
-                # mse = mean_squared_error(y_true, y_pred)
-                # rmse = np.sqrt(mse)
-
-                # st.write(f"### {metric} 성능 평가")
-                # st.write(f"MAE (평균 절대 오차): {mae}")
-                # st.write(f"MSE (평균 제곱 오차): {mse}")
-                # st.write(f"RMSE (제곱근 평균 제곱 오차): {rmse}")
 
             else:
                 st.write(f"{metric}에 대한 유효한 데이터가 없습니다.")
