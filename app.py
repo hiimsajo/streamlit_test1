@@ -101,7 +101,7 @@ if uploaded_file is not None:
         # 예측 모델 선택
         model_option = st.selectbox("예측 모델을 선택하세요", ["Prophet", "LSTM"])
 
-        # 다양한 look_back 값 설정 (주간, 월간, 계절적 패턴 고려)
+        # 다양한 look_back 값 설정 (설정 기준은 주간, 월간, 계절, 상반하반, 연별 패턴)
         look_back_values = [7, 30, 90, 180, 365]
 
         # Plotly layout 설정 (한글 폰트)
@@ -140,6 +140,14 @@ if uploaded_file is not None:
                     scaler = MinMaxScaler(feature_range=(0, 1))
                     scaled_data = scaler.fit_transform(valid_data[['y']].values)
 
+                    # look_back 후보 값들 보다 작은 경우 고려
+                    look_back_values = [lb for lb in look_back_candidates if lb < len(valid_data)]
+
+                    if not look_back_values:
+                        st.write(f"{metric}에 대한 유효한 look_back 값이 없습니다.")
+                        continue
+
+                    # 최적값 찾기 위한 셋팅
                     best_look_back = 0
                     best_mse = float("inf")
                     best_predictions = None
@@ -179,13 +187,14 @@ if uploaded_file is not None:
 
                         mse = mean_squared_error(valid_data['y'][-30:], future_predictions[:30])
 
+                        # 최적값 적용
                         if mse < best_mse:
                             best_mse = mse
                             best_look_back = look_back
                             best_predictions = future_predictions
                             best_future_dates = future_dates
 
-                    st.write(f"LSTM 학습을 위한 {metric}의 최적의 과거참조기간은: {best_look_back}, 그리고 이때의 MSE: {best_mse}")
+                    st.write(f"Best look_back for {metric}: {best_look_back} with MSE: {best_mse}")
 
                     fig = go.Figure()
                     fig.add_trace(go.Scatter(x=valid_data['ds'], y=valid_data['y'], mode='markers', name='실제', marker=dict(color='blue')))
