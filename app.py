@@ -21,15 +21,6 @@ def local_css(file_name):
 # css 적용하기
 local_css("style.css")
 
-# # 한글폰트 적용하기
-# font_path = 'font/NotoSansKR-VariableFont_wght.ttf'
-# font_properties = fm.FontProperties(fname=font_path)
-# fm.fontManager.addfont(font_path)
-# plt.rcParams['font.family'] = font_properties.get_name()
-# plt.rcParams['axes.titlesize'] = 17  # 그래프 제목 크기
-# plt.rcParams['axes.labelsize'] = 13  # 축 제목 크기
-# plt.rcParams['xtick.labelsize'] = 11  # x축 눈금 크기
-# plt.rcParams['ytick.labelsize'] = 11  # y축 눈금 크기
 
 # 파일 인코딩 감지 함수
 def detect_encoding(file):
@@ -132,31 +123,20 @@ if uploaded_file is not None:
 
                 fig.add_trace(go.Scatter(x=data['ds'], y=data['y'], mode='markers', name='실제', marker=dict(color='blue')))
                 fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines', name='예측', line=dict(color='orange')))
-                # fig, ax = plt.subplots(figsize=(16, 8)) # 가로폭 조정
-                # ax.plot(data['ds'], data['y'], label='실제', color='blue')
-                # ax.plot(forecast['ds'], forecast['yhat'], label='예측', color='orange')
-
+                
                 # 이상치 기준선이 존재하는 경우에만 기준선 및 이상치 표시
                 if metric in thresholds:
                     # 기준선 표시
                     fig.add_hline(y=thresholds[metric]["upper"], line=dict(color='green', dash='dash'), name='상한선')
                     fig.add_hline(y=thresholds[metric]["lower"], line=dict(color='green', dash='dash'), name='하한선')
-                    # ax.axhline(y=thresholds[metric]["upper"], color='green', linestyle='--', label='상한선')
-                    # ax.axhline(y=thresholds[metric]["lower"], color='green', linestyle='--', label='하한선')
-
+                  
                     # 이상치 표시
                     outliers = data[(data['y'] > thresholds[metric]["upper"]) | (data['y'] < thresholds[metric]["lower"])]
                     fig.add_trace(go.Scatter(x=outliers['ds'], y=outliers['y'], mode='markers', name='이상치', marker=dict(color='red')))
-                    # ax.scatter(outliers['ds'], outliers['y'], color='red', label='이상치')
-            
+                                
                 fig.update_layout(title=f"{metric} 예측 그래프", xaxis_title='날짜', yaxis_title=metric)
                 st.plotly_chart(fig)
-                # ax.legend(prop=font_properties, loc='upper right') # 범례박스 고정
-                # ax.set_title(f"{metric} 예측 그래프", fontproperties=font_properties)
-                # plt.xticks(fontsize=14)  # x축 눈금 크기 설정
-                # plt.yticks(fontsize=14)  # y축 눈금 크기 설정
-                # plt.subplots_adjust(hspace=0.8)  # 그래프 사이에 간격 추가
-                # st.pyplot(fig)
+                
                 # 그래프 사이에 간격 추가
                 st.markdown("<div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
 
