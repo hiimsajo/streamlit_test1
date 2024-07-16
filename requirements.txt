@@ -14,3 +14,4 @@ streamlit-option-menu
 numpy<2.0
 chardet
 scikit-learn
+tensorflow
