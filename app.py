@@ -102,7 +102,7 @@ if uploaded_file is not None:
         model_option = st.selectbox("예측 모델을 선택하세요", ["Prophet", "LSTM"])
 
         # 다양한 look_back 값 설정 (설정 기준은 주간, 월간, 계절, 상반하반, 연별 패턴)
-        look_back_values = [7, 30, 90, 180, 365]
+        look_back_candidates = [7, 30, 90, 180, 365]
 
         # Plotly layout 설정 (한글 폰트)
         font_family = "Noto Sans KR"  # 한글 폰트를 사용
@@ -218,3 +218,4 @@ if uploaded_file is not None:
         st.error(f"파일을 처리하는 중 오류가 발생했습니다: {e}")
 else:
     st.info("CSV 파일을 업로드하세요.")
+    
