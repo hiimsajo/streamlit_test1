@@ -182,7 +182,7 @@ if uploaded_file is not None:
 
                         future_predictions = scaler.inverse_transform(np.array(future_predictions).reshape(-1, 1))
 
-                        future_dates = pd.date_range(start=valid_data['ds'].iloc[-1], periods=31, closed='right')
+                        future_dates = pd.date_range(start=valid_data['ds'].iloc[-1], periods=31) # closed = 'right' 제거
                         future_df = pd.DataFrame(data={'ds': future_dates, 'yhat': future_predictions.flatten()})
 
                         mse = mean_squared_error(valid_data['y'][-30:], future_predictions[:30])
