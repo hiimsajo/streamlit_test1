@@ -2,18 +2,20 @@ import streamlit as st
 import pandas as pd
 from prophet import Prophet
 import plotly.graph_objects as go
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-from matplotlib import rc
+# import matplotlib.pyplot as plt
+# import matplotlib.font_manager as fm
+# from matplotlib import rc
 from streamlit_option_menu import option_menu
 import chardet
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout
-from tensorflow.keras.callbacks import EarlyStopping
+import torch
+import torch.nn as nn
+# import tensorflow as tf
+# from tensorflow.keras.models import Sequential
+# from tensorflow.keras.layers import LSTM, Dense, Dropout
+# from tensorflow.keras.callbacks import EarlyStopping
 
 # 페이지 설정
 st.set_page_config(layout="wide")
@@ -42,6 +44,21 @@ def create_lstm_dataset(data, look_back=1):
         X.append(a)
         Y.append(data[i + look_back, 0])
     return np.array(X), np.array(Y)
+
+    # PyTorch LSTM 모델 정의
+class LSTM(nn.Module):
+    def __init__(self, input_size=1, hidden_layer_size=100, output_size=1):
+        super().__init__()
+        self.hidden_layer_size = hidden_layer_size
+        self.lstm = nn.LSTM(input_size, hidden_layer_size)
+        self.linear = nn.Linear(hidden_layer_size, output_size)
+        self.hidden_cell = (torch.zeros(1,1,self.hidden_layer_size),
+                            torch.zeros(1,1,self.hidden_layer_size))
+
+    def forward(self, input_seq):
+        lstm_out, self.hidden_cell = self.lstm(input_seq.view(len(input_seq) ,1, -1), self.hidden_cell)
+        predictions = self.linear(lstm_out.view(len(input_seq), -1))
+        return predictions[-1]
 
 # 파일 업로드
 st.markdown("<h1 class='title'>AI Health data Monitoring and Prediction System</h1>", unsafe_allow_html=True)
@@ -102,7 +119,7 @@ if uploaded_file is not None:
         model_option = st.selectbox("예측 모델을 선택하세요", ["Prophet", "LSTM"])
 
         # 다양한 look_back 값 설정 (설정 기준은 주간, 월간, 계절, 상반하반, 연별 패턴)
-        look_back_candidates = [7, 30, 90, 180, 365]
+        look_back_candidates = [7, 14, 30, 90, 180, 365]
 
         # Plotly layout 설정 (한글 폰트)
         font_family = "Noto Sans KR"  # 한글 폰트를 사용
@@ -155,46 +172,50 @@ if uploaded_file is not None:
 
                     for look_back in look_back_values:
                         X, Y = create_lstm_dataset(scaled_data, look_back)
-                        X = np.reshape(X, (X.shape[0], X.shape[1], 1))
+                        X = torch.from_numpy(X).float()
+                        Y = torch.from_numpy(Y).float()
 
-                        model = Sequential()
-                        model.add(LSTM(50, return_sequences=True, input_shape=(look_back, 1)))
-                        model.add(Dropout(0.2))  # 드롭아웃 추가
-                        model.add(LSTM(50, return_sequences=False))
-                        model.add(Dropout(0.2))  # 드롭아웃 추가
-                        model.add(Dense(25))
-                        model.add(Dense(1))
+                        model = LSTM()
+                        loss_function = nn.MSELoss()
+                        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-                        model.compile(optimizer='adam', loss='mean_squared_error')
+                        epochs = 100
+                        for i in range(epochs):
+                            for seq, labels in zip(X, Y):
+                                optimizer.zero_grad()
+                                model.hidden_cell = (torch.zeros(1, 1, model.hidden_layer_size),
+                                                    torch.zeros(1, 1, model.hidden_layer_size))
 
-                        # 조기 종료 콜백 추가
-                        early_stopping = EarlyStopping(monitor='loss', patience=10, restore_best_weights=True)
-                        model.fit(X, Y, batch_size=1, epochs=100, callbacks=[early_stopping], verbose=0)
+                                y_pred = model(seq)
+
+                                single_loss = loss_function(y_pred, labels)
+                                single_loss.backward()
+                                optimizer.step()
 
                         # 미래 예측
-                        test_data = scaled_data[-look_back:]
-                        future_predictions = []
-                        for _ in range(30):  # 30일 예측
-                            test_data = np.reshape(test_data, (1, look_back, 1))
-                            prediction = model.predict(test_data)
-                            future_predictions.append(prediction[0][0])
-                            test_data = np.append(test_data[0][1:], prediction)[np.newaxis, :, np.newaxis]
+                        test_inputs = scaled_data[-look_back:].tolist()
+                        model.eval()
+                        for i in range(30):  # 30일 예측
+                            seq = torch.FloatTensor(test_inputs[-look_back:])
+                            with torch.no_grad():
+                                model.hidden_cell = (torch.zeros(1, 1, model.hidden_layer_size),
+                                                    torch.zeros(1, 1, model.hidden_layer_size))
+                                test_inputs.append(model(seq).item())
 
-                        future_predictions = scaler.inverse_transform(np.array(future_predictions).reshape(-1, 1))
+                        future_predictions = scaler.inverse_transform(np.array(test_inputs[-30:]).reshape(-1, 1))
 
-                        future_dates = pd.date_range(start=valid_data['ds'].iloc[-1], periods=30) # closed = 'right' 제거
+                        future_dates = pd.date_range(start=valid_data['ds'].iloc[-1], periods=30)
                         future_df = pd.DataFrame(data={'ds': future_dates, 'yhat': future_predictions.flatten()})
 
                         mse = mean_squared_error(valid_data['y'][-30:], future_predictions[:30])
 
-                        # 최적값 적용
                         if mse < best_mse:
                             best_mse = mse
                             best_look_back = look_back
                             best_predictions = future_predictions
                             best_future_dates = future_dates
 
-                    st.write(f"Best look_back for {metric}: {best_look_back} with MSE: {best_mse}")
+                    st.write(f"{metric}의 최적 과거참조기간(look_back값)은 {best_look_back}, 이때 MSE 값은 {best_mse}")
 
                     fig = go.Figure()
                     fig.add_trace(go.Scatter(x=valid_data['ds'], y=valid_data['y'], mode='markers', name='실제', marker=dict(color='blue')))
@@ -218,4 +239,3 @@ if uploaded_file is not None:
         st.error(f"파일을 처리하는 중 오류가 발생했습니다: {e}")
 else:
     st.info("CSV 파일을 업로드하세요.")
-    
