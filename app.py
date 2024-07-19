@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from prophet import Prophet
+from fbprophet import Prophet
 import plotly.graph_objects as go
 # import matplotlib.pyplot as plt
 # import matplotlib.font_manager as fm
